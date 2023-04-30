@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Upload Form</title>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.11/cropper.min.css" rel="stylesheet">
+    <style>
+  #image-container {
+    width: 500px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
+    overflow: hidden;
+  }
+
+  #image {
+    max-width: 100%;
+    max-height: 100%;
+  }
+</style>
+</head>
+<body>
+<h1>Image Rotate Form</h1>
+<form method="POST" action="http://localhost:5000/rotate_image" enctype="multipart/form-data">
+    <input type="file" name="image">
+    <button type="submit">90 derece sağa döndür</button>
+</form>
+<h1>Image Resize Form</h1> <br>
+
+<form method="POST" action="http://localhost:5000/process_image" enctype="multipart/form-data">
+    <label>
+        Resim:
+        <input type="file" name="image">
+    </label>
+    <label>
+        genislik :
+        <input type="number" name="w">
+    </label>
+    <label>
+        yukseklik:
+        <input type="number" name="h">
+    </label>
+    <button type="submit">Gönder</button>
+</form>
+
+<h1>Image Crop Form</h1> <br>
+
+<form method="POST" action="http://localhost:5000/cropped_image" enctype="multipart/form-data">
+    <div>
+      <input type="file" id="image-input" name="image">
+    </div>
+    <div id="image-container" >
+      <img id="image" src="" />
+    </div>
+    <div>
+      <button id="crop-button" type="submit">Crop</button>
+    </div>
+     <label>
+        genislik :
+        <input type="number" step="any" name="w" id="w">
+    </label>
+    <label>
+        yukseklik:
+        <input type="number" step="any" name="h" id="h">
+    </label>
+     <label>
+        y :
+        <input type="number" step="any" name="y" id="y">
+    </label>
+    <label>
+        x:
+        <input type="number" step="any" name="x" id="x">
+    </label>
+  </form>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.11/cropper.min.js"></script>
+    <script>
+      var cropper = null;
+      var cropData = null;
+      var originalImage = null;
+
+      $('#image-input').on('change', function() {
+        var input = $(this)[0];
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            $('#image').attr('src', e.target.result);
+            originalImage = e.target.result;
+          }
+          reader.readAsDataURL(input.files[0]);
+        }
+      });
+
+      $(function() {
+        $('#image').on('load', function() {
+          cropper = new Cropper(this, {
+            aspectRatio: 1 / 1,
+            crop: function(event) {
+              cropData = event.detail;
+            }
+          });
+        });
+
+        $('#crop-button').on('click', function() {
+          if (cropper) {
+            var croppedCanvas = cropper.getCroppedCanvas({
+              width: cropData.width,
+              height: cropData.height,
+              x: cropData.x,
+              y: cropData.y,
+              imageSmoothingQuality: 'high'
+            });
+            var croppedImage = croppedCanvas.toDataURL('image/jpeg', 0.8);
+            var json = JSON.stringify({
+               // originalImage: originalImage,
+              // croppedImage: croppedImage,
+              cropData: cropData
+            });
+            document.getElementById("y").value=cropData.y;
+            document.getElementById("x").value=cropData.x;
+            document.getElementById("h").value=cropData.height;
+            document.getElementById("w").value=cropData.width;
+
+            console.log('JSON:', json);
+            // JSON data with the cropped image and crop data can now be sent to the server
+          }
+        });
+      });
+    </script>
+
+
+
+</body>
+</html>
